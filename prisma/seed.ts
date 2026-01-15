@@ -7,6 +7,7 @@ async function main() {
         {
             value: "agroindustria",
             label: "Doação - Agroindústrias",
+            formType: "default",
             order: 1,
             items: [
                 { value: "despolpadeira", label: "Despolpadeira de fruta industrial", order: 1 },
@@ -17,6 +18,7 @@ async function main() {
         {
             value: "leite",
             label: "Doação - Equipamentos Leite",
+            formType: "default",
             order: 2,
             items: [
                 { value: "ordenhadeira", label: "Ordenhadeira mecânica", order: 1 },
@@ -30,6 +32,7 @@ async function main() {
         {
             value: "transporte",
             label: "Doação - Transporte Leite",
+            formType: "default",
             order: 3,
             items: [
                 { value: "caminhao", label: "Caminhão tanque toco isotérmico", order: 1 }
@@ -38,6 +41,7 @@ async function main() {
         {
             value: "calcario",
             label: "Doação - Insumos/Calcário",
+            formType: "calcario",
             order: 4,
             items: [
                 { value: "dolomitico", label: "Calcário dolomítico", order: 1 }
@@ -46,6 +50,7 @@ async function main() {
         {
             value: "apicultura",
             label: "Doação - Insumos/Apicultura",
+            formType: "default",
             order: 5,
             items: [
                 { value: "kitG", label: "Kit apicultura G", order: 1 },
@@ -59,6 +64,7 @@ async function main() {
         {
             value: "mudas",
             label: "Doação - Insumos/Mudas",
+            formType: "mudas",
             order: 6,
             items: [
                 { value: "banana_princesa", label: "Muda de Banana - Variedade: BRS Princesa, Tipo: Maçã", order: 1 },
@@ -76,6 +82,7 @@ async function main() {
         {
             value: "semen",
             label: "Doação - Insumos/Sêmen",
+            formType: "default",
             order: 7,
             items: [
                 { value: "gir_leiteiro_conv", label: "Sêmen de Bovinos Convencional da Raça Gir Leiteiro", order: 1 },
@@ -93,6 +100,7 @@ async function main() {
         {
             value: "comercializacao",
             label: "Doação - Comercialização",
+            formType: "default",
             order: 8,
             items: [
                 { value: "barracas", label: "Barracas para feira", order: 1 }
@@ -101,6 +109,7 @@ async function main() {
         {
             value: "mecanizacao",
             label: "Doação - Mecanização Agrícola",
+            formType: "default",
             order: 9,
             items: [
                 { value: "carreta_6tn", label: "Carreta Agrícola 6TN", order: 1 },
@@ -144,6 +153,7 @@ async function main() {
         {
             value: "veiculos",
             label: "Doação - Veículos",
+            formType: "default",
             order: 10,
             items: [
                 { value: "pickup_4x4_diesel_2p", label: "Pick-up, 4x4, Diesel 2 Portas", order: 1 },
@@ -155,6 +165,7 @@ async function main() {
         {
             value: "veiculo_carga",
             label: "Doação - Veículo de Carga",
+            formType: "default",
             order: 11,
             items: [
                 { value: "caminhao_bau", label: "Caminhão Baú", order: 1 },
@@ -165,6 +176,7 @@ async function main() {
         {
             value: "infraestrutura",
             label: "Doação - Infraestrutura",
+            formType: "default",
             order: 12,
             items: [
                 { value: "caminhao_cavalo_mecanico", label: "Caminhão Cavalo Mecânico", order: 1 },

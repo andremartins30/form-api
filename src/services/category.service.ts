@@ -27,7 +27,8 @@ export class CategoryService {
 
         const categoryOptions = categories.map(cat => ({
             value: cat.value,
-            label: cat.label
+            label: cat.label,
+            formType: cat.formType
         }));
 
         const itemsMap: Record<string, Array<{ value: string; label: string }>> = {};

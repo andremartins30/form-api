@@ -21,6 +21,7 @@ model Category {
     id        Int      @id @default(autoincrement())
     value     String   @unique // Ex: "agroindustria"
     label     String // Ex: "Doação - Agroindústrias"
+    formType  String   @default("default") // Ex: "default", "calcario", "mudas"
     order     Int      @default(0)
     active    Boolean  @default(true)
     createdAt DateTime @default(now())
