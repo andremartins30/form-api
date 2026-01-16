@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { FormService } from '../services/form.service';
 import { z } from 'zod';
+import { PlanoFilters } from '../types/formPlano.types';
 
 export class FormController {
     private formService: FormService;
@@ -10,16 +11,25 @@ export class FormController {
     }
 
     /**
-     * POST /api/forms/submissions
-     * Cria uma nova submissão de formulário
+     * POST /api/planos
+     * Cria um novo plano de formulário (versão híbrida)
      */
-    createSubmission = async (req: Request, res: Response): Promise<void> => {
+    createPlano = async (req: Request, res: Response): Promise<void> => {
         try {
-            const submission = await this.formService.createSubmission(req.body);
+            const plano = await this.formService.createPlano(req.body);
 
             res.status(201).json({
                 success: true,
-                data: submission,
+                data: {
+                    id: plano.id,
+                    nomeProponente: plano.nomeProponente,
+                    cnpj: plano.cnpj,
+                    municipio: plano.municipio,
+                    formType: plano.formType,
+                    status: plano.status,
+                    createdAt: plano.createdAt,
+                },
+                message: 'Plano criado com sucesso',
             });
         } catch (error) {
             // Erro de validação Zod
@@ -33,7 +43,7 @@ export class FormController {
             }
 
             // Outros erros
-            console.error('Erro ao criar submissão:', error);
+            console.error('Erro ao criar plano:', error);
             res.status(500).json({
                 success: false,
                 error: 'Erro interno do servidor',
@@ -42,20 +52,32 @@ export class FormController {
     };
 
     /**
-     * GET /api/forms/submissions
-     * Lista todas as submissões
+     * GET /api/planos/list
+     * Lista resumida de planos (otimizado para listagem)
+     * Query params: municipio, categoriaId, formType, status, dataInicio, dataFim, cnpj, page, limit
      */
-    getAllSubmissions = async (req: Request, res: Response): Promise<void> => {
+    getPlanosLight = async (req: Request, res: Response): Promise<void> => {
         try {
-            const submissions = await this.formService.getAllSubmissions();
+            const filters: PlanoFilters = {
+                municipio: req.query.municipio as string,
+                categoriaId: req.query.categoriaId ? parseInt(req.query.categoriaId as string) : undefined,
+                formType: req.query.formType as string,
+                status: req.query.status as string,
+                cnpj: req.query.cnpj as string,
+                dataInicio: req.query.dataInicio ? new Date(req.query.dataInicio as string) : undefined,
+                dataFim: req.query.dataFim ? new Date(req.query.dataFim as string) : undefined,
+                page: req.query.page ? parseInt(req.query.page as string) : 1,
+                limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
+            };
+
+            const result = await this.formService.getPlanosLight(filters);
 
             res.status(200).json({
                 success: true,
-                data: submissions,
-                count: submissions.length,
+                data: result,
             });
         } catch (error) {
-            console.error('Erro ao listar submissões:', error);
+            console.error('Erro ao listar planos (light):', error);
             res.status(500).json({
                 success: false,
                 error: 'Erro interno do servidor',
@@ -64,28 +86,112 @@ export class FormController {
     };
 
     /**
-     * GET /api/forms/submissions/:id
-     * Busca uma submissão específica por ID
+     * GET /api/planos
+     * Lista planos com filtros e paginação (completo)
+     * Query params: municipio, categoriaId, formType, status, dataInicio, dataFim, cnpj, page, limit
      */
-    getSubmissionById = async (req: Request, res: Response): Promise<void> => {
+    getPlanos = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const filters: PlanoFilters = {
+                municipio: req.query.municipio as string,
+                categoriaId: req.query.categoriaId ? parseInt(req.query.categoriaId as string) : undefined,
+                formType: req.query.formType as string,
+                status: req.query.status as string,
+                cnpj: req.query.cnpj as string,
+                dataInicio: req.query.dataInicio ? new Date(req.query.dataInicio as string) : undefined,
+                dataFim: req.query.dataFim ? new Date(req.query.dataFim as string) : undefined,
+                page: req.query.page ? parseInt(req.query.page as string) : 1,
+                limit: req.query.limit ? parseInt(req.query.limit as string) : 50,
+            };
+
+            const result = await this.formService.getPlanos(filters);
+
+            res.status(200).json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            console.error('Erro ao listar planos:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Erro interno do servidor',
+            });
+        }
+    };
+
+    /**
+     * GET /api/planos/:id
+     * Busca um plano específico por ID com todos os relacionamentos
+     */
+    getPlanoById = async (req: Request, res: Response): Promise<void> => {
         try {
             const id = String(req.params.id);
-            const submission = await this.formService.getSubmissionById(id);
+            const plano = await this.formService.getPlanoById(id);
 
-            if (!submission) {
+            if (!plano) {
                 res.status(404).json({
                     success: false,
-                    error: 'Submissão não encontrada',
+                    error: 'Plano não encontrado',
                 });
                 return;
             }
 
             res.status(200).json({
                 success: true,
-                data: submission,
+                data: plano,
             });
         } catch (error) {
-            console.error('Erro ao buscar submissão:', error);
+            console.error('Erro ao buscar plano:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Erro interno do servidor',
+            });
+        }
+    };
+
+    /**
+     * GET /api/planos/stats
+     * Gera estatísticas agregadas dos planos
+     * Query params: municipio, formType, status
+     */
+    getStats = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const filters: Partial<PlanoFilters> = {
+                municipio: req.query.municipio as string,
+                formType: req.query.formType as string,
+                status: req.query.status as string,
+            };
+
+            const stats = await this.formService.getStats(filters);
+
+            res.status(200).json({
+                success: true,
+                data: stats,
+            });
+        } catch (error) {
+            console.error('Erro ao gerar estatísticas:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Erro interno do servidor',
+            });
+        }
+    };
+
+    /**
+     * GET /api/forms/planos (compatibilidade legada)
+     * @deprecated Use GET /api/planos
+     */
+    getAllPlanos = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const planos = await this.formService.getAllPlanos();
+
+            res.status(200).json({
+                success: true,
+                data: planos,
+                count: planos.length,
+            });
+        } catch (error) {
+            console.error('Erro ao listar planos:', error);
             res.status(500).json({
                 success: false,
                 error: 'Erro interno do servidor',

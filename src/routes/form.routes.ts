@@ -5,21 +5,23 @@ const router = Router();
 const formController = new FormController();
 
 /**
- * POST /api/forms/submissions
- * Cria uma nova submissão de formulário
+ * POST /api/forms/planos
+ * Cria um novo plano de formulário
  */
-router.post('/submissions', formController.createSubmission);
+router.post('/planos', formController.createPlano);
 
 /**
- * GET /api/forms/submissions
- * Lista todas as submissões
+ * GET /api/forms/planos
+ * Lista todos os planos (compatibilidade legada)
+ * @deprecated Use GET /api/planos
  */
-router.get('/submissions', formController.getAllSubmissions);
+router.get('/planos', formController.getAllPlanos);
 
 /**
- * GET /api/forms/submissions/:id
- * Busca uma submissão específica por ID
+ * GET /api/forms/planos/:id
+ * Busca um plano específico por ID
+ * @deprecated Use GET /api/planos/:id
  */
-router.get('/submissions/:id', formController.getSubmissionById);
+router.get('/planos/:id', formController.getPlanoById);
 
 export default router;

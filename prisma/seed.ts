@@ -6,7 +6,7 @@ async function main() {
     const categoriesData = [
         {
             value: "agroindustria",
-            label: "Doação - Agroindústrias",
+            label: "Agroindústrias",
             formType: "default",
             order: 1,
             items: [
@@ -17,7 +17,7 @@ async function main() {
         },
         {
             value: "leite",
-            label: "Doação - Equipamentos Leite",
+            label: "Equipamentos Leite",
             formType: "default",
             order: 2,
             items: [
@@ -31,7 +31,7 @@ async function main() {
         },
         {
             value: "transporte",
-            label: "Doação - Transporte Leite",
+            label: "Transporte Leite",
             formType: "default",
             order: 3,
             items: [
@@ -40,7 +40,7 @@ async function main() {
         },
         {
             value: "calcario",
-            label: "Doação - Insumos/Calcário",
+            label: "Insumos/Calcário",
             formType: "calcario",
             order: 4,
             items: [
@@ -49,7 +49,7 @@ async function main() {
         },
         {
             value: "apicultura",
-            label: "Doação - Insumos/Apicultura",
+            label: "Insumos/Apicultura",
             formType: "default",
             order: 5,
             items: [
@@ -63,7 +63,7 @@ async function main() {
         },
         {
             value: "mudas",
-            label: "Doação - Insumos/Mudas",
+            label: "Insumos/Mudas",
             formType: "mudas",
             order: 6,
             items: [
@@ -81,7 +81,7 @@ async function main() {
         },
         {
             value: "semen",
-            label: "Doação - Insumos/Sêmen",
+            label: "Insumos/Sêmen",
             formType: "default",
             order: 7,
             items: [
@@ -99,7 +99,7 @@ async function main() {
         },
         {
             value: "comercializacao",
-            label: "Doação - Comercialização",
+            label: "Comercialização",
             formType: "default",
             order: 8,
             items: [
@@ -108,7 +108,7 @@ async function main() {
         },
         {
             value: "mecanizacao",
-            label: "Doação - Mecanização Agrícola",
+            label: "Mecanização Agrícola",
             formType: "default",
             order: 9,
             items: [
@@ -152,7 +152,7 @@ async function main() {
         },
         {
             value: "veiculos",
-            label: "Doação - Veículos",
+            label: "Veículos",
             formType: "default",
             order: 10,
             items: [
@@ -164,7 +164,7 @@ async function main() {
         },
         {
             value: "veiculo_carga",
-            label: "Doação - Veículo de Carga",
+            label: "Veículo de Carga",
             formType: "default",
             order: 11,
             items: [
@@ -175,7 +175,7 @@ async function main() {
         },
         {
             value: "infraestrutura",
-            label: "Doação - Infraestrutura",
+            label: "Infraestrutura",
             formType: "default",
             order: 12,
             items: [
