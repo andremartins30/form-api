@@ -10,13 +10,19 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+enum StatusPlano {
+    EM_ANALISE
+    APROVADO
+    NEGADO
+}
+
 model FormPlano {
     id String @id @default(uuid())
 
     // Metadados
     formType    String // "default", "calcario", "mudas"
     formVersion String // "1.0", "2.0"
-    status      String @default("pendente") // "pendente", "aprovado", "rejeitado"
+    status      StatusPlano @default(EM_ANALISE)
 
     // Informações de Contato (campos indexados para consultas rápidas)
     nomeProponente String

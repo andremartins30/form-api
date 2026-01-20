@@ -3,6 +3,10 @@
  * Baseados no JSON formatado do frontend
  */
 
+import { StatusPlano } from '@prisma/client';
+
+export { StatusPlano };
+
 // ============================================
 // Interfaces para Dados Formatados
 // ============================================
@@ -157,7 +161,7 @@ export interface ExtractedPlanoData {
     // Metadados
     formType: string;
     formVersion: string;
-    status: string;
+    status: StatusPlano;
 
     // Informações de Contato
     nomeProponente: string;

@@ -178,6 +178,74 @@ export class FormController {
     };
 
     /**
+     * PUT /api/planos/:id
+     * Atualiza um plano existente
+     */
+    updatePlano = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const id = String(req.params.id);
+            console.log('🔄 [UPDATE] Recebendo atualização para plano:', id);
+            console.log('📦 [UPDATE] Body recebido:', JSON.stringify(req.body, null, 2));
+
+            const plano = await this.formService.updatePlano(id, req.body);
+
+            console.log('✅ [UPDATE] Plano atualizado com sucesso:', plano.id);
+
+            res.status(200).json({
+                success: true,
+                data: {
+                    id: plano.id,
+                    nomeProponente: plano.nomeProponente,
+                    cnpj: plano.cnpj,
+                    municipio: plano.municipio,
+                    formType: plano.formType,
+                    status: plano.status,
+                    updatedAt: plano.updatedAt,
+                },
+                message: 'Plano atualizado com sucesso',
+            });
+        } catch (error) {
+            // Plano não encontrado
+            if (error instanceof Error && error.message === 'Plano não encontrado') {
+                console.error('❌ [UPDATE] Plano não encontrado');
+                res.status(404).json({
+                    success: false,
+                    error: 'Plano não encontrado',
+                });
+                return;
+            }
+
+            // Plano não pode ser editado (aprovado ou negado)
+            if (error instanceof Error && error.message.includes('Não é possível editar')) {
+                console.error('❌ [UPDATE] Status não permite edição:', error.message);
+                res.status(403).json({
+                    success: false,
+                    error: error.message,
+                });
+                return;
+            }
+
+            // Erro de validação Zod
+            if (error instanceof z.ZodError) {
+                console.error('❌ [UPDATE] Erro de validação:', error.issues);
+                res.status(400).json({
+                    success: false,
+                    error: 'Dados inválidos',
+                    details: error.issues,
+                });
+                return;
+            }
+
+            // Outros erros
+            console.error('❌ [UPDATE] Erro ao atualizar plano:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Erro interno do servidor',
+            });
+        }
+    };
+
+    /**
      * GET /api/forms/planos (compatibilidade legada)
      * @deprecated Use GET /api/planos
      */

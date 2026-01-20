@@ -38,4 +38,10 @@ router.get('/:id', formController.getPlanoById);
  */
 router.post('/', formController.createPlano);
 
+/**
+ * PUT /api/planos/:id
+ * Atualiza um plano existente
+ */
+router.put('/:id', formController.updatePlano);
+
 export default router;

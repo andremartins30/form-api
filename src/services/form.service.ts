@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { FormRepository } from '../repositories/form.repository';
-import { FormPlano } from '@prisma/client';
+import { FormPlano, StatusPlano } from '@prisma/client';
 import {
     CreatePlanoInput,
     PayloadFormatado,
@@ -81,7 +81,7 @@ export class FormService {
             // Metadados
             formType,
             formVersion: '2.0', // Versão híbrida
-            status: 'pendente',
+            status: StatusPlano.EM_ANALISE,
 
             // Informações de Contato
             nomeProponente: contato.nome_proponente,
@@ -149,7 +149,7 @@ export class FormService {
         const extractedData: ExtractedPlanoData = {
             formType: 'default',
             formVersion: validatedData.formVersion,
-            status: 'pendente',
+            status: StatusPlano.EM_ANALISE,
             nomeProponente: 'Não especificado',
             cnpj: '00000000000000',
             municipio: 'Não especificado',
@@ -186,6 +186,83 @@ export class FormService {
      */
     async getPlanoById(id: string): Promise<FormPlano | null> {
         return await this.formRepository.findById(id);
+    }
+
+    /**
+     * Atualiza um plano existente
+     */
+    async updatePlano(id: string, input: CreatePlanoInput): Promise<FormPlano> {
+        console.log('🔍 [SERVICE] Verificando existência do plano:', id);
+
+        // Verificar se o plano existe
+        const planoExistente = await this.formRepository.findById(id);
+        if (!planoExistente) {
+            throw new Error('Plano não encontrado');
+        }
+
+        console.log('📋 [SERVICE] Plano existente encontrado:', planoExistente.nomeProponente);
+
+        // Verificar se o plano pode ser editado (não pode estar aprovado ou negado)
+        if (planoExistente.status === StatusPlano.APROVADO || planoExistente.status === StatusPlano.NEGADO) {
+            throw new Error(`Não é possível editar um plano com status ${planoExistente.status}`);
+        }
+
+        // Tentar validar como formato híbrido novo (v2)
+        const validationV2 = createPlanoSchemaV2.safeParse(input);
+
+        if (validationV2.success) {
+            console.log('✓ [SERVICE] Validação V2 bem-sucedida');
+            // Formato híbrido novo detectado
+            const validatedData = validationV2.data;
+            const extractedData = this.extractPlanoData(validatedData.payloadFormatado);
+
+            console.log('📊 [SERVICE] Dados extraídos:', {
+                nomeProponente: extractedData.nomeProponente,
+                municipio: extractedData.municipio,
+                categoria: extractedData.categoriaValue,
+                item: extractedData.itemValue
+            });
+
+            const resultado = await this.formRepository.update(id, {
+                ...extractedData,
+                payloadFormatado: validatedData.payloadFormatado,
+                payloadOriginal: validatedData.payloadOriginal,
+            });
+
+            console.log('✅ [SERVICE] Update executado no repository');
+            return resultado;
+        }
+
+        console.log('⚠️ [SERVICE] Tentando validação legacy');
+        // Se não é V2, tentar formato legacy
+        const validationLegacy = createPlanoSchemaLegacy.safeParse(input);
+
+        if (!validationLegacy.success) {
+            throw validationLegacy.error;
+        }
+
+        const validatedData = validationLegacy.data;
+
+        // Formato legacy - dados mínimos
+        const extractedData: ExtractedPlanoData = {
+            formType: 'default',
+            formVersion: validatedData.formVersion,
+            status: StatusPlano.EM_ANALISE,
+            nomeProponente: 'Não especificado',
+            cnpj: '00000000000000',
+            municipio: 'Não especificado',
+            possuiAgricultores: false,
+            publicoAgricultura: true,
+            declaracaoVeracidade: false,
+            profissionais: [],
+            cadeiasValor: [],
+            equipamentos: [],
+        };
+
+        return await this.formRepository.update(id, {
+            ...extractedData,
+            payloadFormatado: validatedData.answers,
+        });
     }
 
     /**

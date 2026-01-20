@@ -1,5 +1,5 @@
 import { prisma } from '../db/prisma';
-import { FormPlano, Prisma } from '@prisma/client';
+import { FormPlano, Prisma, StatusPlano } from '@prisma/client';
 import {
     ExtractedPlanoData,
     PlanoFilters,
@@ -145,7 +145,7 @@ export class FormRepository {
             where.formType = formType;
         }
         if (status) {
-            where.status = status;
+            where.status = status as StatusPlano;
         }
         if (cnpj) {
             where.cnpj = cnpj;
@@ -165,6 +165,7 @@ export class FormRepository {
                     nomeProponente: true,
                     cnpj: true,
                     municipio: true,
+                    status: true,
                     createdAt: true,
                     categoria: {
                         select: {
@@ -228,7 +229,7 @@ export class FormRepository {
             where.formType = formType;
         }
         if (status) {
-            where.status = status;
+            where.status = status as StatusPlano;
         }
         if (cnpj) {
             where.cnpj = cnpj;
@@ -296,7 +297,7 @@ export class FormRepository {
             where.formType = filters.formType;
         }
         if (filters?.status) {
-            where.status = filters.status;
+            where.status = filters.status as StatusPlano;
         }
 
         // Total de planos
@@ -372,6 +373,146 @@ export class FormRepository {
                 count: s._count,
             })),
         };
+    }
+
+    /**
+     * Atualiza um plano existente com novos dados
+     */
+    async update(
+        id: string,
+        data: ExtractedPlanoData & {
+            payloadFormatado: any;
+            payloadOriginal?: any;
+        }
+    ): Promise<FormPlano> {
+        console.log('💾 [REPOSITORY] Iniciando update do plano:', id);
+        console.log('📝 [REPOSITORY] Dados recebidos:', {
+            nomeProponente: data.nomeProponente,
+            municipio: data.municipio,
+            categoriaValue: data.categoriaValue,
+            itemValue: data.itemValue
+        });
+
+        // Buscar IDs de categoria e item baseados nos values
+        let categoriaId: number | undefined;
+        let itemId: number | undefined;
+
+        if (data.categoriaValue) {
+            const categoria = await prisma.category.findUnique({
+                where: { value: data.categoriaValue }
+            });
+            categoriaId = categoria?.id;
+            console.log('🔍 [REPOSITORY] Categoria encontrada:', categoria?.label, 'ID:', categoriaId);
+        }
+
+        if (data.itemValue && categoriaId) {
+            const item = await prisma.item.findFirst({
+                where: {
+                    categoryId: categoriaId,
+                    value: data.itemValue
+                }
+            });
+            itemId = item?.id;
+            console.log('🔍 [REPOSITORY] Item encontrado:', item?.label, 'ID:', itemId);
+        }
+
+        // Atualizar plano com todos os dados relacionados em uma transação
+        return await prisma.$transaction(async (tx) => {
+            console.log('🔄 [REPOSITORY] Executando transação de update');
+            // 1. Atualizar FormPlano principal
+            const plano = await tx.formPlano.update({
+                where: { id },
+                data: {
+                    // Metadados
+                    formType: data.formType,
+                    formVersion: data.formVersion,
+                    status: data.status,
+
+                    // Informações de Contato
+                    nomeProponente: data.nomeProponente,
+                    cnpj: data.cnpj,
+                    municipio: data.municipio,
+                    telefone1: data.telefone1,
+                    telefone2: data.telefone2,
+                    email: data.email,
+
+                    // Solicitação (FKs)
+                    categoriaId: categoriaId,
+                    itemId: itemId,
+
+                    // Flags
+                    possuiAgricultores: data.possuiAgricultores,
+                    quantidadeFamilias: data.quantidadeFamilias,
+                    publicoAgricultura: data.publicoAgricultura,
+                    declaracaoVeracidade: data.declaracaoVeracidade,
+
+                    // Datas
+                    dataPropostaSubmissao: data.dataPropostaSubmissao,
+                    localProposta: data.localProposta,
+
+                    // Responsáveis
+                    responsavelTecnico: data.responsavelTecnico,
+                    gestorNome: data.gestorNome,
+
+                    // JSON completo
+                    payloadFormatado: data.payloadFormatado,
+                    payloadOriginal: data.payloadOriginal,
+                },
+            });
+
+            console.log('✅ [REPOSITORY] FormPlano atualizado:', {
+                id: plano.id,
+                nomeProponente: plano.nomeProponente,
+                municipio: plano.municipio
+            });
+
+            // 2. Deletar e recriar Profissionais relacionados
+            await tx.profissional.deleteMany({
+                where: { planoId: plano.id }
+            });
+            if (data.profissionais && data.profissionais.length > 0) {
+                await tx.profissional.createMany({
+                    data: data.profissionais.map(prof => ({
+                        planoId: plano.id,
+                        tipo: prof.tipo,
+                        instituicao: prof.instituicao,
+                    })),
+                });
+            }
+
+            // 3. Deletar e recriar Cadeias de Valor relacionadas
+            await tx.cadeiaValor.deleteMany({
+                where: { planoId: plano.id }
+            });
+            if (data.cadeiasValor && data.cadeiasValor.length > 0) {
+                await tx.cadeiaValor.createMany({
+                    data: data.cadeiasValor.map(cv => ({
+                        planoId: plano.id,
+                        tipo: cv.tipo,
+                        produto: cv.produto,
+                        mercados: cv.mercados,
+                    })),
+                });
+            }
+
+            // 4. Deletar e recriar Equipamentos relacionados
+            await tx.equipamento.deleteMany({
+                where: { planoId: plano.id }
+            });
+            if (data.equipamentos && data.equipamentos.length > 0) {
+                await tx.equipamento.createMany({
+                    data: data.equipamentos.map(eq => ({
+                        planoId: plano.id,
+                        tipo: eq.tipo,
+                        nome: eq.nome,
+                        quantidade: eq.quantidade,
+                    })),
+                });
+            }
+
+            console.log('✅ [REPOSITORY] Transação de update concluída com sucesso');
+            return plano;
+        });
     }
 
     /**
